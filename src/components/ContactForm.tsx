@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { validateContactPayload } from "@/lib/contactValidation";
 
 type Status = "idle" | "loading" | "success" | "error";
 
@@ -24,25 +25,15 @@ export function ContactForm() {
         .value,
     };
 
-    try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      const json = (await res.json()) as { ok?: boolean; error?: string };
-      if (!res.ok || !json.ok) {
-        setStatus("error");
-        setMessage(json.error ?? "No se pudo enviar. Inténtalo de nuevo.");
-        return;
-      }
-      setStatus("success");
-      setMessage("¡Gracias! Te contactamos muy pronto.");
-      form.reset();
-    } catch {
+    const err = validateContactPayload(data);
+    if (err) {
       setStatus("error");
-      setMessage("Error de red. Revisa tu conexión.");
+      setMessage(err);
+      return;
     }
+    setStatus("success");
+    setMessage("¡Gracias! Te contactamos muy pronto.");
+    form.reset();
   }
 
   return (
